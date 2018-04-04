@@ -1,0 +1,27 @@
+{
+  "name": "ii-jsql",
+  "version": "0.1.1",
+  "description": "A small utility to generate SQL strings out of JSON objects.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iiulian/jsql.git"
+  },
+  "keywords": [
+    "json",
+    "sql"
+  ],
+  "author": "Iulian Ilea",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iiulian/jsql/issues"
+  },
+  "homepage": "https://github.com/iiulian/jsql#readme",
+  "dependencies": {
+    "@types/lodash": "^4.14.106",
+    "lodash": "^4.17.5"
+  }
+}
