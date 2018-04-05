@@ -7,7 +7,7 @@ export interface ColumnAlias {
 export type Column = string | ColumnAlias;
 
 export interface TableAlias {
-    [key: string]: string;
+    [key: string]: string | Select;
 }
 
 export type Table = string | TableAlias;
@@ -218,7 +218,7 @@ export class Parser {
 
     private parseWhere(where: Where) {
         if (typeof where === 'string') {
-            this.buffer.push(where);
+            this.buffer.push(' ', where);
         }
         // parse WhereSHort
         else if (_.isPlainObject(where)) {
@@ -274,7 +274,7 @@ export class Parser {
 
     private parseColumn(column: Column) {
         if (typeof column === 'string') {
-            this.buffer.push(column);
+            this.buffer.push('`', column, '`');
         }
         else if (_.isPlainObject(column)) {
             Object.keys(column)
@@ -294,16 +294,29 @@ export class Parser {
     }
 
     private parseTable(table: Table) {
+        const buf = this.buffer;
+
         if (typeof table === 'string') {
-            this.buffer.push('`', table, '`');
+            buf.push('`', table, '`');
         }
         else if (_.isPlainObject(table)) {
             Object.keys(table)
                 .forEach(
-                    alias => {
-                        this.buffer.push('(');
-                        this.parseTable(table[alias]);
-                        this.buffer.push(') AS ', alias);
+                    (alias, index: number) => {
+                        if (index > 0) {
+                            buf.push(', ');
+                        }
+
+                        const type = typeof table[alias];
+                        if (type === 'string') {
+                            buf.push('`', <string> table[alias], '`');
+                        }
+                        else if (this.isSelect(table[alias])) {
+                            buf.push('(');
+                            this.parseSelect(<Select> table[alias]);
+                            buf.push(')');
+                        }
+                        this.buffer.push(' AS ', alias);
                     }
                 )
         }
