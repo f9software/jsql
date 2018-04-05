@@ -1,6 +1,6 @@
 {
   "name": "ii-jsql",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A small utility to generate SQL strings out of JSON objects.",
   "main": "index.js",
   "scripts": {
