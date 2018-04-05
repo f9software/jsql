@@ -96,7 +96,7 @@ export class Parser {
             this.parseUpdate(<Update> jsql);
         }
         else if (jsql.hasOwnProperty('deleteFrom')) {
-            // this.parseDelete(<Delete> jsql);
+            this.parseDelete(<Delete> jsql);
         }
 
         const out: Result = {
@@ -202,6 +202,16 @@ export class Parser {
         jsql.where.forEach(where => this.parseWhere(where));
     }
 
+    private parseDelete(jsql: Delete) {
+        const buf = this.buffer;
+
+        buf.push(' DELETE FROM ');
+        this.parseTable(jsql.deleteFrom);
+
+        buf.push(' WHERE ');
+        jsql.where.forEach(where => this.parseWhere(where));
+    }
+
 
 
     /** Parser helpers **/
@@ -285,7 +295,7 @@ export class Parser {
 
     private parseTable(table: Table) {
         if (typeof table === 'string') {
-            this.buffer.push(table);
+            this.buffer.push('`', table, '`');
         }
         else if (_.isPlainObject(table)) {
             Object.keys(table)
@@ -298,4 +308,9 @@ export class Parser {
                 )
         }
     }
+}
+
+
+export function parse(jsql: JSql): Result {
+    return (new Parser()).parse(jsql);
 }
