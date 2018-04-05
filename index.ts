@@ -126,37 +126,44 @@ export class Parser {
     /** Parsers **/
 
     private parseSelect(jsql: Select) {
-        this.buffer.push(' SELECT ');
+        const buf = this.buffer;
+
+        buf.push(' SELECT ');
 
         jsql.select.map(
             (column, index: number) => {
                 if (index > 0) {
-                    this.buffer.push(', ');
+                    buf.push(', ');
                 }
-                this.parseColumn(column);
+                if (typeof column === 'string' && column === '*') {
+                    buf.push('*');
+                }
+                else {
+                    this.parseColumn(column);
+                }
             }
         );
 
-        this.buffer.push(' FROM ');
+        buf.push(' FROM ');
         this.parseTable(jsql.from);
 
         if (jsql.where) {
-            this.buffer.push(' WHERE ');
+            buf.push(' WHERE ');
             jsql.where.forEach(where => this.parseWhere(where));
         }
 
         if (jsql.order) {
-            this.buffer.push(' ORDER BY ');
+            buf.push(' ORDER BY ');
             jsql.order.forEach((order: Order, index: number) => {
                 if (index > 0) {
-                    this.buffer.push(', ');
+                    buf.push(', ');
                 }
                 this.parseOrder(order);
             })
         }
 
         if (jsql.limit) {
-            this.buffer.push(' LIMIT ');
+            buf.push(' LIMIT ');
             this.parseLimit(jsql.limit);
         }
     }
