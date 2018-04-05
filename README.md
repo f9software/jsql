@@ -25,7 +25,7 @@ const select: Select = {
         }
     },
     where: [{
-        email: 'iulian@f9software.com'
+        email: 'john@example.com'
     }, 'OR', 'COUNT(name) > 1']
 };
 
@@ -36,7 +36,7 @@ Result when parsing a select jsql
 ```
 {
     "sql": " SELECT `name`, `username`, `email`, `password`, ( SELECT `id` FROM `ids` WHERE `email` = (a.email) LIMIT 0, 1) AS randomId FROM `users` AS a, ( SELECT `firstName`, `lastName` FROM `names`) AS b WHERE `email` = ? OR COUNT(name) > 1",
-    "values": ["iulian@f9software.com"]
+    "values": ["john@example.com"]
 }
 ```
 
