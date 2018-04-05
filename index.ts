@@ -25,7 +25,7 @@ export interface Sql {
 export type WhereValue = string | number | boolean | Select | /*WhereValueDetailed |*/ Sql;
 
 export interface WhereShort {
-    [key: string]: WhereValue
+    [key: string]: WhereValue | WhereValue[]
 }
 
 export type Where = string | WhereShort;
@@ -217,22 +217,39 @@ export class Parser {
     /** Parser helpers **/
 
     private parseWhere(where: Where) {
+        const buf = this.buffer;
+
         if (typeof where === 'string') {
-            this.buffer.push(' ', where);
+            buf.push(' ', where);
         }
         // parse WhereSHort
         else if (_.isPlainObject(where)) {
+            buf.push('(');
             Object.keys(where)
                 .forEach((column, index: number) => {
                     if (index > 0) {
-                        this.buffer.push(' AND ');
+                        buf.push(' AND ');
                     }
 
-                    if (typeof column === 'string') {
-                        this.buffer.push('`', column, '` = ');
-                        this.parseValue(where[column]);
+                    buf.push('`', column, '`');
+
+                    const type = typeof where[column];
+                    if (type === 'string' || type === 'number') {
+                        buf.push(' = ');
+                        this.parseValue(<string | number > where[column]);
+                    }
+                    else if (_.isArray(where[column])) {
+                        buf.push(' IN (');
+                        (<WhereValue[]> where[column]).map((value, index: number) => {
+                            if (index > 0) {
+                                buf.push(', ');
+                            }
+                            this.parseValue(value);
+                        });
+                        buf.push(')');
                     }
                 });
+            buf.push(')');
         }
     }
 
