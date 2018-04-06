@@ -281,6 +281,9 @@ export class Parser {
             this.parseSql(<Sql> value);
             buf.push(')');
         }
+        else if (value === null) {
+            buf.push('null');
+        }
     }
 
     private parseSql(sql: Sql) {
