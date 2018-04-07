@@ -293,7 +293,7 @@ export class Parser {
             buf.push(' AND ');
             this.parseValue((<WhereValue[]> value)[1]);
         }
-        else if (operator === 'IN' || operator === '=') {
+        else if (operator === 'IN' || (operator === '=' && _.isArray(value))) {
             buf.push('IN (');
             (<WhereValue[]> value).forEach((v, index: number) => {
                 if (index > 0) {
