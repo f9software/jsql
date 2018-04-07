@@ -233,7 +233,7 @@ export class Parser {
         if (typeof where === 'string') {
             buf.push(' ', where);
         }
-        // parse WhereSHort
+        // parse WhereShort
         else if (_.isPlainObject(where)) {
             buf.push('(');
             Object.keys(where)
@@ -246,14 +246,12 @@ export class Parser {
 
                     const value = where[column];
                     const type = typeof value;
+
                     if (type === 'string' || type === 'number') {
                         buf.push(' = ');
                         this.parseValue(<string | number > value);
                     }
-                    // WhereValueWithOperator
-                    else if (_.isPlainObject(value) && value.hasOwnProperty('operator')) {
-                        this.parseWhereValueOperator(<WhereValueWithOperator> value);
-                    }
+                    // WhereValue[]
                     else if (_.isArray(value)) {
                         buf.push(' IN (');
                         (<WhereValue[]> value).map((v, index: number) => {
@@ -263,6 +261,20 @@ export class Parser {
                             this.parseValue(v);
                         });
                         buf.push(')');
+                    }
+                    else if (this.isSelect(value)) {
+                        buf.push(' IN (');
+                        this.parseSelect(<Select> value);
+                        buf.push(')');
+                    }
+                    else if (this.isSql(value)) {
+                        buf.push(' = (');
+                        this.parseSql(<Sql> value);
+                        buf.push(')');
+                    }
+                    // WhereValueWithOperator
+                    else if (_.isPlainObject(value)) {
+                        this.parseWhereValueOperator(<WhereValueWithOperator> value);
                     }
                 });
             buf.push(')');
@@ -274,14 +286,26 @@ export class Parser {
         const value = whereValueOperator[operator];
         const buf = this.buffer;
 
-        buf.push(operator);
-
+        buf.push(' ');  // for better looking
         if (operator === 'BETWEEN') {
+            buf.push(operator, ' ');
             this.parseValue((<WhereValue[]> value)[0]);
-            buf.push(' AND');
+            buf.push(' AND ');
             this.parseValue((<WhereValue[]> value)[1]);
         }
+        else if (operator === 'IN' || operator === '=') {
+            buf.push('IN (');
+            (<WhereValue[]> value).forEach((v, index: number) => {
+                if (index > 0) {
+                    buf.push(', ');
+                }
+                this.parseValue(v);
+            });
+            buf.push(')');
+
+        }
         else {
+            buf.push(operator, ' ');
             this.parseValue(<WhereValue> value);
         }
     }
