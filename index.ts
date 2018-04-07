@@ -22,10 +22,14 @@ export interface Sql {
 //     value: string | Select;
 // }
 
+export interface WhereValueWithOperator {
+    [key: string]: WhereValue | WhereValue[];
+}
+
 export type WhereValue = string | number | boolean | Select | /*WhereValueDetailed |*/ Sql;
 
 export interface WhereShort {
-    [key: string]: WhereValue | WhereValue[]
+    [key: string]: WhereValue | WhereValue[] | WhereValueWithOperator;
 }
 
 export type Where = string | WhereShort;
@@ -240,23 +244,45 @@ export class Parser {
 
                     buf.push('`', column, '`');
 
-                    const type = typeof where[column];
+                    const value = where[column];
+                    const type = typeof value;
                     if (type === 'string' || type === 'number') {
                         buf.push(' = ');
-                        this.parseValue(<string | number > where[column]);
+                        this.parseValue(<string | number > value);
                     }
-                    else if (_.isArray(where[column])) {
+                    // WhereValueWithOperator
+                    else if (_.isPlainObject(value) && value.hasOwnProperty('operator')) {
+                        this.parseWhereValueOperator(<WhereValueWithOperator> value);
+                    }
+                    else if (_.isArray(value)) {
                         buf.push(' IN (');
-                        (<WhereValue[]> where[column]).map((value, index: number) => {
+                        (<WhereValue[]> value).map((v, index: number) => {
                             if (index > 0) {
                                 buf.push(', ');
                             }
-                            this.parseValue(value);
+                            this.parseValue(v);
                         });
                         buf.push(')');
                     }
                 });
             buf.push(')');
+        }
+    }
+
+    private parseWhereValueOperator(whereValueOperator: WhereValueWithOperator) {
+        const operator = Object.keys(whereValueOperator)[0];
+        const value = whereValueOperator[operator];
+        const buf = this.buffer;
+
+        buf.push(operator);
+
+        if (operator === 'BETWEEN') {
+            this.parseValue((<WhereValue[]> value)[0]);
+            buf.push(' AND');
+            this.parseValue((<WhereValue[]> value)[1]);
+        }
+        else {
+            this.parseValue(<WhereValue> value);
         }
     }
 
