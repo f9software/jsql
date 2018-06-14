@@ -82,9 +82,9 @@ export type JSql = Select | Insert | Update | Delete;
 
 
 export class Parser {
-    private buffer: string[];
+    private buffer!: string[];
 
-    private values: (string | number | boolean)[];
+    private values!: (string | number | boolean)[];
 
     parse(jsql: JSql): Result {
         this.buffer = [];
@@ -108,7 +108,8 @@ export class Parser {
             values: this.values
         };
 
-        this.buffer = this.values = null;
+        this.buffer = [];
+        this.values = [];
 
         return out;
     }
@@ -321,6 +322,10 @@ export class Parser {
             buf.push('?');
             this.values.push(<string | number> value);
         }
+        else if (type === 'object' && value instanceof Date) {
+            buf.push('FROM_UNIXTIME(?)');
+            this.values.push(value.getTime() / 1000);
+        }
         else if (this.isSelect(value)) {
             buf.push('(');
             this.parseSelect(<Select> value);
@@ -331,7 +336,7 @@ export class Parser {
             this.parseSql(<Sql> value);
             buf.push(')');
         }
-        else if (value === null) {
+        else if (value === null || value === undefined) {
             buf.push('null');
         }
     }
